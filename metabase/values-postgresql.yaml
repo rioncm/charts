@@ -1,0 +1,62 @@
+# Example values for PostgreSQL deployment
+replicaCount: 1
+
+image:
+  repository: metabase/metabase
+  pullPolicy: IfNotPresent
+  tag: "v0.50.0"
+
+# Database configuration for PostgreSQL
+database:
+  type: postgresql
+  postgresql:
+    host: postgresql.default.svc.cluster.local  # Change to your PostgreSQL host
+    port: 5432
+    database: metabase
+    username: metabase
+    password: metabase-password  # Change this password
+    # For production, use existingSecret instead:
+    # existingSecret: metabase-db-secret
+    # secretKey: password
+
+# Enable ingress for external access
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+  hosts:
+    - host: metabase.yourdomain.com  # Change to your domain
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: metabase-tls
+      hosts:
+        - metabase.yourdomain.com  # Change to your domain
+
+persistence:
+  enabled: true
+  storageClass: ""  # Use default storage class
+  size: 10Gi
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+metabase:
+  siteUrl: "https://metabase.yourdomain.com"  # Change to your domain
+  javaOpts: "-Xmx1g"
+  timezone: "UTC"
+  
+  # Optional: Pre-configure admin user (remove after first login)
+  admin:
+    email: admin@yourdomain.com  # Change this
+    password: change-me-in-production  # Change this
+    firstName: "Admin"
+    lastName: "User"

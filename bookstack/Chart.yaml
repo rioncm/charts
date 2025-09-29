@@ -1,0 +1,16 @@
+apiVersion: v2
+name: bookstack
+description: A Helm chart for BookStack - A simple, self-hosted, easy-to-use wiki platform
+type: application
+version: 0.2.2
+appVersion: "v25.02"
+home: https://www.bookstackapp.com/
+sources:
+  - https://github.com/BookStackApp/BookStack
+keywords:
+  - bookstack
+  - wiki
+  - documentation
+  - knowledge-base
+maintainers:
+  - name: rioncm

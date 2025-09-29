@@ -1,0 +1,27 @@
+annotations:
+  category: CRM
+  images: |
+    - name: odoo
+      image: docker.io/odoo:18.0
+  licenses: Apache-2.0
+apiVersion: v2
+appVersion: "18.0"
+description: Odoo is an open source ERP and CRM platform, formerly known as OpenERP,
+  that can connect a wide variety of business operations such as sales, supply chain,
+  finance, and project management.
+home: https://www.odoo.com
+icon: https://dyltqmyl993wv.cloudfront.net/assets/stacks/odoo/img/odoo-stack-220x234.png
+keywords:
+- odoo
+- crm
+- www
+- http
+- web
+- erp
+maintainers:
+- name: Rion Morgenstern
+  email: rioncm@gmail.com
+name: odoo-cs
+sources:
+- https://github.com/odoo/odoo
+version: 1.0.0

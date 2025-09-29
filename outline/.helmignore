@@ -1,0 +1,8 @@
+.DS_Store
+.git/
+.gitignore
+private/
+reference/
+future-development/
+*.swp
+*.tmp

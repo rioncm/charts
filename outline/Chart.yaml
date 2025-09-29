@@ -1,0 +1,16 @@
+apiVersion: v2
+name: outline
+description: Simplified Helm chart for deploying the Outline knowledge base
+kubeVersion: ">=1.23.0"
+type: application
+version: 0.1.3
+appVersion: "0.87.4"
+keywords:
+  - outline
+  - wiki
+  - documentation
+home: https://www.getoutline.com/
+sources:
+  - https://github.com/outline/outline
+  - https://docs.getoutline.com/
+icon: https://avatars.githubusercontent.com/u/31005328?s=200&v=4

@@ -1,0 +1,150 @@
+# Default values for bookstack.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Image configuration
+image:
+  repository: lscr.io/linuxserver/bookstack
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "version-v25.02"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# BookStack specific configuration
+bookstack:
+  # APP_KEY - IMPORTANT: Generate your own key using:
+  # docker run -it --rm --entrypoint /bin/bash lscr.io/linuxserver/bookstack:latest appkey
+  # Keep the "base64:" prefix
+  appKey: ""
+  
+  # Alternatively, use existing secret for APP_KEY
+  appKeySecret: ""
+  appKeySecretKey: "app-key"
+  
+  # Set to true to automatically create a secret for APP_KEY (requires appKey to be set)
+  createAppKeySecret: false
+  
+  # APP_URL - The base URL for BookStack
+  appUrl: "https://bookstack.example.com"
+  
+  # User/Group IDs for file permissions
+  puid: 1000
+  pgid: 1000
+  
+  # Timezone
+  timezone: "UTC"
+  
+  # Additional environment variables
+  extraEnv: []
+    # - name: CUSTOM_VAR
+    #   value: "custom_value"
+  
+  # Environment variables from secrets
+  extraEnvFrom: []
+    # - secretRef:
+    #     name: bookstack-secrets
+    # - configMapRef:
+    #     name: bookstack-config
+
+# External database configuration
+database:
+  host: "mysql.example.com"
+  port: 3306
+  name: "bookstack"
+  username: "bookstack"
+  password: "changeme"
+  # Optionally use existing secret for database password
+  existingSecret: ""
+  existingSecretKey: "password"
+
+# Persistence configuration
+persistence:
+  enabled: true
+  # storageClass: "default"
+  accessMode: ReadWriteOnce
+  size: 8Gi
+  # existingClaim: ""
+
+# Service configuration  
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "traefik"
+  annotations:
+    # Traefik specific annotations
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # Cert-manager annotation for automatic SSL
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    
+  hosts:
+    - host: bookstack.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  
+  tls:
+    - secretName: bookstack-tls
+      hosts:
+        - bookstack.example.com
+
+# Resource limits and requests
+resources: {}
+  # limits:
+  #   cpu: 500m
+  #   memory: 512Mi
+  # requests:
+  #   cpu: 250m
+  #   memory: 256Mi
+
+# Auto scaling configuration
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# Node selector, tolerations and affinity
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Pod security context
+podSecurityContext: {}
+  # fsGroup: 2000
+
+# Security context
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# Service account
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# Pod annotations
+podAnnotations: {}
+
+# Number of replicas (should be 1 for BookStack as it's not designed for horizontal scaling)
+replicaCount: 1

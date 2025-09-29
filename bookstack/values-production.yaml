@@ -1,0 +1,104 @@
+# Example values for BookStack production deployment
+
+bookstack:
+  # IMPORTANT: Generate your own APP_KEY using:
+  # docker run -it --rm --entrypoint /bin/bash lscr.io/linuxserver/bookstack:latest appkey
+  appKey: "base64:REPLACE_WITH_YOUR_GENERATED_KEY"
+  # Or use a secret (recommended for production):
+  # appKeySecret: "bookstack-app-key-secret"
+  # createAppKeySecret: true  # Will create secret from appKey value above
+  
+  appUrl: "https://bookstack.yourdomain.com"
+  puid: 1000
+  pgid: 1000
+  timezone: "America/New_York"
+  
+  # Example: Environment variables from secrets
+  extraEnvFrom:
+    - secretRef:
+        name: bookstack-extra-secrets  # Create this secret separately
+    # - configMapRef:
+    #     name: bookstack-config
+        
+  # Example: Additional individual environment variables
+  extraEnv:
+    - name: MAIL_DRIVER
+      value: "smtp"
+    - name: MAIL_HOST
+      valueFrom:
+        secretKeyRef:
+          name: bookstack-mail-secret
+          key: smtp-host
+
+database:
+  host: "mysql.yourdomain.com"
+  port: 3306
+  name: "bookstack_prod"
+  username: "bookstack_user"
+  # Option 1: Direct password (not recommended for production)
+  # password: "your_secure_password_here"
+  # Option 2: Use existing secret (recommended)
+  existingSecret: "bookstack-db-secret"
+  existingSecretKey: "password"
+  # Option 3: Let chart create secret from password value above
+  # password: "your_secure_password_here"  # Chart will create secret automatically
+
+persistence:
+  enabled: true
+  storageClass: "fast-ssd"  # Adjust to your storage class
+  size: 20Gi
+  accessMode: ReadWriteOnce
+
+ingress:
+  enabled: true
+  className: "traefik"
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # Optional: Enable rate limiting
+    # traefik.ingress.kubernetes.io/router.middlewares: "default-rate-limit@kubernetescrd"
+    
+  hosts:
+    - host: bookstack.yourdomain.com
+      paths:
+        - path: /
+          pathType: Prefix
+  
+  tls:
+    - secretName: bookstack-tls
+      hosts:
+        - bookstack.yourdomain.com
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+# Enable horizontal pod autoscaling if needed (not recommended for BookStack)
+# autoscaling:
+#   enabled: true
+#   minReplicas: 1
+#   maxReplicas: 1  # Keep at 1 - BookStack doesn't support horizontal scaling
+#   targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+  # kubernetes.io/os: linux
+
+tolerations: []
+
+affinity: {}
+  # podAntiAffinity:
+  #   preferredDuringSchedulingIgnoredDuringExecution:
+  #   - weight: 100
+  #     podAffinityTerm:
+  #       labelSelector:
+  #         matchExpressions:
+  #         - key: app.kubernetes.io/name
+  #           operator: In
+  #           values:
+  #           - bookstack
+  #       topologyKey: kubernetes.io/hostname

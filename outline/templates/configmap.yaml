@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "outline.configMapName" . }}
+  namespace: {{ include "outline.namespace" . }}
+  labels:
+    {{- include "outline.labels" . | nindent 4 }}
+data:
+  NODE_ENV: "production"
+  PORT: {{ .Values.service.port | default 3000 | quote }}
+  URL: {{ required "outline.url is required" .Values.outline.url | quote }}
+  {{- if .Values.outline.collaborationUrl }}
+  COLLABORATION_URL: {{ .Values.outline.collaborationUrl | quote }}
+  {{- end }}
+  {{- if .Values.outline.cdnUrl }}
+  CDN_URL: {{ .Values.outline.cdnUrl | quote }}
+  {{- end }}
+  WEB_CONCURRENCY: {{ .Values.outline.webConcurrency | default 1 | quote }}
+  DEFAULT_LANGUAGE: {{ .Values.outline.defaultLanguage | default "en_US" | quote }}
+  FORCE_HTTPS: {{ .Values.outline.forceHttps | default true | quote }}
+  ENABLE_UPDATES: {{ .Values.outline.enableUpdates | default true | quote }}
+  DEBUG: {{ .Values.outline.debug | default "http" | quote }}
+  LOG_LEVEL: {{ .Values.outline.logLevel | default "info" | quote }}
+  {{- if .Values.database.connectionPool.min }}
+  DATABASE_CONNECTION_POOL_MIN: {{ .Values.database.connectionPool.min | quote }}
+  {{- end }}
+  {{- if .Values.database.connectionPool.max }}
+  DATABASE_CONNECTION_POOL_MAX: {{ .Values.database.connectionPool.max | quote }}
+  {{- end }}
+  {{- if .Values.database.sslMode }}
+  PGSSLMODE: {{ .Values.database.sslMode | quote }}
+  {{- end }}
+  REDIS_URL: {{ include "outline.redisURL" . | quote }}
+  FILE_STORAGE: {{ .Values.fileStorage.type | default "local" | quote }}
+  {{- if eq (.Values.fileStorage.type | default "local") "local" }}
+  FILE_STORAGE_LOCAL_ROOT_DIR: {{ .Values.fileStorage.localRootDir | default "/var/lib/outline/data" | quote }}
+  {{- end }}
+  {{- if .Values.fileStorage.uploadMaxSize }}
+  FILE_STORAGE_UPLOAD_MAX_SIZE: {{ include "outline.toString" .Values.fileStorage.uploadMaxSize | quote }}
+  {{- end }}
+  {{- if .Values.fileStorage.importMaxSize }}
+  FILE_STORAGE_IMPORT_MAX_SIZE: {{ include "outline.toString" .Values.fileStorage.importMaxSize | quote }}
+  {{- end }}
+  {{- if .Values.fileStorage.workspaceImportMaxSize }}
+  FILE_STORAGE_WORKSPACE_IMPORT_MAX_SIZE: {{ include "outline.toString" .Values.fileStorage.workspaceImportMaxSize | quote }}
+  {{- end }}
+  {{- if eq (.Values.fileStorage.type | default "local") "s3" }}
+  {{- if .Values.fileStorage.s3.region }}
+  AWS_REGION: {{ .Values.fileStorage.s3.region | quote }}
+  {{- end }}
+  {{- if .Values.fileStorage.s3.accelerateUrl }}
+  AWS_S3_ACCELERATE_URL: {{ .Values.fileStorage.s3.accelerateUrl | quote }}
+  {{- end }}
+  {{- if .Values.fileStorage.s3.maxUploadSize }}
+  AWS_S3_UPLOAD_MAX_SIZE: {{ include "outline.toString" .Values.fileStorage.s3.maxUploadSize | quote }}
+  {{- end }}
+  {{- if .Values.fileStorage.s3.uploadBucketUrl }}
+  AWS_S3_UPLOAD_BUCKET_URL: {{ .Values.fileStorage.s3.uploadBucketUrl | quote }}
+  {{- end }}
+  {{- if .Values.fileStorage.s3.uploadBucketName }}
+  AWS_S3_UPLOAD_BUCKET_NAME: {{ .Values.fileStorage.s3.uploadBucketName | quote }}
+  {{- end }}
+  AWS_S3_FORCE_PATH_STYLE: {{ default true .Values.fileStorage.s3.forcePathStyle | quote }}
+  {{- if .Values.fileStorage.s3.acl }}
+  AWS_S3_ACL: {{ .Values.fileStorage.s3.acl | quote }}
+  {{- end }}
+  {{- end }}
+  RATE_LIMITER_ENABLED: {{ .Values.rateLimiter.enabled | default true | quote }}
+  {{- if .Values.rateLimiter.requests }}
+  RATE_LIMITER_REQUESTS: {{ .Values.rateLimiter.requests | quote }}
+  {{- end }}
+  {{- if .Values.rateLimiter.durationWindow }}
+  RATE_LIMITER_DURATION_WINDOW: {{ .Values.rateLimiter.durationWindow | quote }}
+  {{- end }}

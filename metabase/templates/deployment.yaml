@@ -1,0 +1,144 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "metabase.fullname" . }}
+  labels:
+    {{- include "metabase.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "metabase.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "metabase.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "metabase.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          env:
+            {{- if eq .Values.database.type "h2" }}
+            - name: MB_DB_TYPE
+              value: "h2"
+            - name: MB_DB_FILE
+              value: "/metabase-data/metabase.db"
+            {{- else if eq .Values.database.type "postgresql" }}
+            - name: MB_DB_TYPE
+              value: "postgres"
+            {{- if .Values.database.postgresql.existingSecret }}
+            - name: MB_DB_CONNECTION_URI
+              value: "postgres://{{ .Values.database.postgresql.username }}@{{ .Values.database.postgresql.host }}:{{ .Values.database.postgresql.port }}/{{ .Values.database.postgresql.database }}"
+            - name: MB_DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.postgresql.existingSecret }}
+                  key: {{ .Values.database.postgresql.secretKey | default "password" }}
+            {{- else }}
+            - name: MB_DB_CONNECTION_URI
+              value: "postgres://{{ .Values.database.postgresql.username }}:{{ .Values.database.postgresql.password }}@{{ .Values.database.postgresql.host }}:{{ .Values.database.postgresql.port }}/{{ .Values.database.postgresql.database }}"
+            {{- end }}
+            {{- else if eq .Values.database.type "mysql" }}
+            - name: MB_DB_TYPE
+              value: "mysql"
+            {{- if .Values.database.mysql.existingSecret }}
+            - name: MB_DB_CONNECTION_URI
+              value: "mysql://{{ .Values.database.mysql.username }}@{{ .Values.database.mysql.host }}:{{ .Values.database.mysql.port }}/{{ .Values.database.mysql.database }}"
+            - name: MB_DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.mysql.existingSecret }}
+                  key: {{ .Values.database.mysql.secretKey | default "password" }}
+            {{- else }}
+            - name: MB_DB_CONNECTION_URI
+              value: "mysql://{{ .Values.database.mysql.username }}:{{ .Values.database.mysql.password }}@{{ .Values.database.mysql.host }}:{{ .Values.database.mysql.port }}/{{ .Values.database.mysql.database }}"
+            {{- end }}
+            {{- end }}
+            {{- if .Values.metabase.siteUrl }}
+            - name: MB_SITE_URL
+              value: {{ .Values.metabase.siteUrl | quote }}
+            {{- end }}
+            - name: MB_JAVA_TIMEZONE
+              value: {{ .Values.metabase.timezone | quote }}
+            - name: JAVA_OPTS
+              value: {{ .Values.metabase.javaOpts | quote }}
+            {{- if .Values.metabase.admin.email }}
+            - name: MB_ADMIN_EMAIL
+              value: {{ .Values.metabase.admin.email | quote }}
+            {{- end }}
+            {{- if .Values.metabase.admin.password }}
+            - name: MB_ADMIN_PASSWORD
+              value: {{ .Values.metabase.admin.password | quote }}
+            {{- end }}
+            {{- if .Values.metabase.admin.firstName }}
+            - name: MB_ADMIN_FIRST_NAME
+              value: {{ .Values.metabase.admin.firstName | quote }}
+            {{- end }}
+            {{- if .Values.metabase.admin.lastName }}
+            - name: MB_ADMIN_LAST_NAME
+              value: {{ .Values.metabase.admin.lastName | quote }}
+            {{- end }}
+            {{- range .Values.env }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+            {{- end }}
+          {{- if .Values.envFromSecrets }}
+          envFrom:
+            {{- range .Values.envFromSecrets }}
+            - secretRef:
+                name: {{ .secretName }}
+            {{- end }}
+          {{- end }}
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: metabase-data
+              mountPath: /metabase-data
+          {{- end }}
+      {{- if .Values.persistence.enabled }}
+      volumes:
+        - name: metabase-data
+          persistentVolumeClaim:
+            claimName: {{ include "metabase.pvcName" . }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
