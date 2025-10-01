@@ -46,55 +46,39 @@ This chart has been deployed and is in current use. Extensive testing has not be
 
    - `DATABASE_URL`
 
-   - Any provider credentials (for example `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`)## Installation
+   - Any provider credentials (for example `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`)
 
-3. Decide whether to reference that secret directly via `secrets.existingSecret` or inject it through `extraEnvFrom`.
+## Installation
 
-4. Configure an external PostgreSQL instance and collect the `DATABASE_URL` connection string.### Quick Start
+### OCI Registry (Recommended)
 
-5. (Optional) Prepare an SMTP configuration if you plan to send notification emails.
-
-1. Add the repository and install:
-
-## Quick Start Example
+Install directly from GitHub Container Registry:
 
 ```bash
+# Install with default values
+helm install outline oci://ghcr.io/rioncm/charts/outline \
+  --namespace outline-project \
+  --create-namespace
 
-```yamlhelm install outline . --namespace outline-project --create-namespace
+# Or with custom configuration
+helm install outline oci://ghcr.io/rioncm/charts/outline \
+  --namespace outline-project \
+  --create-namespace \
+  --set outline.url="https://docs.example.com" \
+  --set database.existingSecret="outline-secrets"
+```
 
-# values.yaml```
+### Local Installation
 
-namespace: outline-project
+If installing from a local copy of the chart:
 
-2. Configure your instance URL and enable at least one authentication provider:
+```bash
+helm install outline . --namespace outline-project --create-namespace
+```
 
-secrets:
+### Production Installation
 
-  existingSecret: outline-secrets```bash
-
-helm install outline . \
-
-database:  --namespace outline-project \
-
-  initialize: true  --create-namespace \
-
-  existingSecret: outline-secrets       # same secret containing DATABASE_URL  --set outline.url="https://docs.example.com" \
-
-  existingSecretKey: DATABASE_URL  --set auth.providers.google.enabled=true \
-
-  --set auth.providers.google.clientId="your-client-id" \
-
-redis:  --set auth.providers.google.clientSecret="your-client-secret"
-
-  enabled: true                        # default in-pod Redis sidecar```
-
-
-
-fileStorage:### Production Installation
-
-  type: local
-
-  localRootDir: /var/lib/outline/dataFor production deployments, create a custom values file:
+For production deployments, create a custom values file:
 
 
 
@@ -154,14 +138,20 @@ ingress:    host: "postgres.yourcompany.com"
 Apply with:        - path: /
 
           pathType: Prefix
-
-```bash  tls:
-
-helm install outline . -n outline-project --create-namespace -f values.yaml    - secretName: docs-yourcompany-com-tls
-
-```      hosts:
-
+  tls:
+    - secretName: docs-yourcompany-com-tls
+      hosts:
         - docs.yourcompany.com
+```
+
+Then install:
+
+```bash
+helm install outline oci://ghcr.io/rioncm/charts/outline \
+  -f values-prod.yaml \
+  --namespace outline-project \
+  --create-namespace
+```
 
 ## Configuration Reference
 
@@ -185,8 +175,13 @@ helm install outline . -n outline-project --create-namespace -f values.yaml    -
 
 - **ingress** – Traefik-oriented defaults with TLS support. Adjust class/annotations as needed.```bash
 
-- **rateLimiter** – Global rate limiter settings mapped to `RATE_LIMITER_*` variables.helm install outline . -f values-prod.yaml --namespace outline-project --create-namespace
+Then install:
 
+```bash
+helm install outline oci://ghcr.io/rioncm/charts/outline \
+  -f values-prod.yaml \
+  --namespace outline-project \
+  --create-namespace
 ```
 
 Consult `values.yaml` and `values.schema.json` for the full list of tunables and validation rules.

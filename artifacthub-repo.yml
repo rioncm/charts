@@ -1,0 +1,55 @@
+# Artifact Hub repository metadata file
+# https://github.com/artifacthub/hub/blob/master/docs/metadata/artifacthub-repo.yml
+
+# Repository ID (generate a new UUID for your repository)
+repositoryID: 6fcd4567-89a0-12b3-45cd-6789ef012345
+
+# Repository owners
+owners:
+  - name: rioncm
+    email: rioncm@gmail.com
+
+# Repository display name (optional)
+displayName: Rion's generic as possible charts
+
+# Repository description (optional)
+description: |
+  A collection of Helm charts for deploying various OSS applications on Kubernetes, specifically K3s. 
+  Each chart is designed for production use with external database support and 
+  secure configuration practices. Not all have been deployed and tested. Check the README.md for details.
+  Contributors are welcome to help test and improve the charts.
+
+# Repository links (optional)
+links:
+  - name: Homepage
+    url: https://github.com/rioncm/charts
+  - name: Source Code
+    url: https://github.com/rioncm/charts
+
+# Files to ignore when processing the repository (optional)
+ignore:
+  - .git
+  - .gitignore
+  - HARBOR-INTEGRATION.md
+  - "*/reference/*"
+  - "*/future-development/*"
+  - "*/private/*"
+
+# Repository data (optional)
+data:
+  # This section can contain any custom data you want to associate
+  # with the repository in Artifact Hub
+  categories:
+    - CRM
+    - Documentation
+    - Analytics
+    - Wiki
+  keywords:
+    - kubernetes
+    - helm
+    - charts
+    - production-ready
+  maintainers:
+    - name: rioncm
+      email: rioncm@gmail.com
+      url: https://github.com/rioncm
