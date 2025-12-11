@@ -1,0 +1,19 @@
+apiVersion: v2
+name: gprox
+description: ACME DNS proxy for Google Cloud DNS packaged for Kubernetes.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.26.0-0"
+keywords:
+  - acme
+  - dns
+  - google-cloud-dns
+  - proxy
+  - certificates
+home: https://github.com/rion/personal-charts
+sources:
+  - https://github.com/rion/personal-charts/tree/main/_dev/gprox
+maintainers:
+  - name: rion
+    email: devnull@example.com

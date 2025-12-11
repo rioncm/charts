@@ -1,0 +1,14 @@
+1. Get the application URL by running these commands:
+{{- if .Values.ingress.enabled }}
+  {{- range .Values.ingress.hosts }}
+  https://{{ .host }}
+  {{- end }}
+{{- else }}
+  export POD_NAME=$(kubectl get pods --namespace {{ include "gprox.namespace" . }} -l "app.kubernetes.io/name={{ include "gprox.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+  kubectl port-forward --namespace {{ include "gprox.namespace" . }} $POD_NAME 8888:8888
+  curl http://127.0.0.1:8888/v1/health
+{{- end }}
+
+2. Ensure the following secrets exist before deploying:
+   - {{ .Values.secrets.config.existingSecret | default (printf "%s-config" (include "gprox.fullname" .)) }} (key: {{ default "config.yaml" .Values.secrets.config.key }})
+   - {{ .Values.secrets.gcloud.existingSecret | default (printf "%s-gcloud" (include "gprox.fullname" .)) }} (key: {{ default "google.json" .Values.secrets.gcloud.key }})

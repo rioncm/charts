@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "gprox.fullname" . }}
+  namespace: {{ include "gprox.namespace" . }}
+  labels:
+    {{- include "gprox.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "gprox.selectorLabels" . | nindent 6 }}
+  strategy:
+    {{- toYaml .Values.deploymentStrategy | nindent 4 }}
+  template:
+    metadata:
+      labels:
+        {{- include "gprox.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "gprox.serviceAccountName" . }}
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      {{- end }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName }}
+      {{- end }}
+      {{- if .Values.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ include "gprox.name" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8888
+              protocol: TCP
+          env:
+            - name: GPROX_CONFIG_PATH
+              value: {{ printf "%s/%s" (default "/etc/gprox" .Values.secrets.config.mountPath) (default "config.yaml" .Values.secrets.config.key) | quote }}
+{{ with .Values.env }}
+{{ toYaml . | indent 12 }}
+{{ end }}
+{{ with .Values.extraEnvFrom }}
+          envFrom:
+{{ toYaml . | indent 12 }}
+{{ end }}
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            {{- omit .Values.livenessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe:
+            {{- omit .Values.readinessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: {{ printf "%s/%s" (default "/etc/gprox" .Values.secrets.config.mountPath) (default "config.yaml" .Values.secrets.config.key) | quote }}
+              subPath: {{ default "config.yaml" .Values.secrets.config.key | quote }}
+              readOnly: true
+            - name: gcloud
+              mountPath: {{ printf "%s/%s" (default "/etc/gprox" .Values.secrets.gcloud.mountPath) (default "google.json" .Values.secrets.gcloud.key) | quote }}
+              subPath: {{ default "google.json" .Values.secrets.gcloud.key | quote }}
+              readOnly: true
+{{ with .Values.extraVolumeMounts }}
+{{ toYaml . | indent 12 }}
+{{ end }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+      volumes:
+        - name: config
+          secret:
+            secretName: {{ .Values.secrets.config.existingSecret | default (printf "%s-config" (include "gprox.fullname" .)) }}
+            items:
+              - key: {{ default "config.yaml" .Values.secrets.config.key }}
+                path: {{ default "config.yaml" .Values.secrets.config.key }}
+        - name: gcloud
+          secret:
+            secretName: {{ .Values.secrets.gcloud.existingSecret | default (printf "%s-gcloud" (include "gprox.fullname" .)) }}
+            items:
+              - key: {{ default "google.json" .Values.secrets.gcloud.key }}
+                path: {{ default "google.json" .Values.secrets.gcloud.key }}
+{{ with .Values.extraVolumes }}
+{{ toYaml . | indent 8 }}
+{{ end }}
+      {{- if .Values.tolerations }}
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      {{- end }}
+      {{- if or .Values.affinity .Values.noControlPlane }}
+      affinity:
+        {{- if .Values.affinity }}
+        {{- toYaml .Values.affinity | nindent 8 }}
+        {{- else if .Values.noControlPlane }}
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - matchExpressions:
+                - key: node-role.kubernetes.io/control-plane
+                  operator: DoesNotExist
+        {{- end }}
+      {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      {{- end }}
