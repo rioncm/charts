@@ -39,6 +39,7 @@ spec:
       {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- $tmpPath := default "/tmp" .Values.tmpfs.path }}
       containers:
         - name: {{ include "gprox.name" . }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -48,6 +49,10 @@ spec:
               containerPort: 8888
               protocol: TCP
           env:
+            - name: TMPDIR
+              value: {{ $tmpPath | quote }}
+            - name: PROMETHEUS_MULTIPROC_DIR
+              value: {{ $tmpPath | quote }}
             - name: GPROX_CONFIG_PATH
               value: {{ printf "%s/%s" (default "/etc/gprox" .Values.secrets.config.mountPath) (default "config.yaml" .Values.secrets.config.key) | quote }}
 {{ with .Values.env }}
@@ -76,6 +81,10 @@ spec:
               mountPath: {{ printf "%s/%s" (default "/etc/gprox" .Values.secrets.gcloud.mountPath) (default "google.json" .Values.secrets.gcloud.key) | quote }}
               subPath: {{ default "google.json" .Values.secrets.gcloud.key | quote }}
               readOnly: true
+            {{- if .Values.tmpfs.enabled }}
+            - name: runtime-tmp
+              mountPath: {{ $tmpPath | quote }}
+            {{- end }}
 {{ with .Values.extraVolumeMounts }}
 {{ toYaml . | indent 12 }}
 {{ end }}
@@ -94,6 +103,13 @@ spec:
             items:
               - key: {{ default "google.json" .Values.secrets.gcloud.key }}
                 path: {{ default "google.json" .Values.secrets.gcloud.key }}
+        {{- if .Values.tmpfs.enabled }}
+        - name: runtime-tmp
+          emptyDir:
+            {{- if .Values.tmpfs.medium }}
+            medium: {{ .Values.tmpfs.medium }}
+            {{- end }}
+        {{- end }}
 {{ with .Values.extraVolumes }}
 {{ toYaml . | indent 8 }}
 {{ end }}
@@ -108,9 +124,10 @@ spec:
         {{- else if .Values.noControlPlane }}
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-            - matchExpressions:
-                - key: node-role.kubernetes.io/control-plane
-                  operator: DoesNotExist
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
         {{- end }}
       {{- end }}
       {{- if .Values.nodeSelector }}

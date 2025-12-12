@@ -40,12 +40,28 @@ securityContext:
     drop:
       - ALL
 
+tmpfs:
+  enabled: true
+  path: /tmp
+  medium: Memory
+
 service:
   type: ClusterIP
   port: 8888
   annotations: {}
   labels: {}
   nodePort: null
+
+metrics:
+  enabled: true
+  path: /metrics
+  port: ""
+  serviceMonitor:
+    enabled: false
+    namespace: ""
+    labels: {}
+    interval: ""
+    scrapeTimeout: ""
 
 ingress:
   enabled: true
@@ -125,6 +141,5 @@ readinessProbe:
 podDisruptionBudget:
   enabled: false
   minAvailable: 1
-  maxUnavailable: null
 
 terminationGracePeriodSeconds: 30

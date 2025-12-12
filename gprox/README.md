@@ -45,6 +45,9 @@ helm install gprox charts/gprox \
 | `secrets.config.existingSecret` | Secret containing `config.yaml` | `""` (falls back to `<release>-config`)
 | `secrets.gcloud.existingSecret` | Secret containing service account JSON | `""` (falls back to `<release>-gcloud`)
 | `noControlPlane` | Adds node affinity to avoid control-plane nodes | `true` |
+| `tmpfs.enabled` | Mounts memory-backed `/tmp` for Gunicorn/Prometheus workers | `true` (`/tmp`, medium `Memory`) |
+| `metrics.enabled` | Adds Prometheus scrape annotations on the Service | `true` (path `/metrics`) |
+| `metrics.serviceMonitor.enabled` | Creates a `ServiceMonitor` resource for the chart | `false` |
 | `livenessProbe` / `readinessProbe` | Hits `/v1/health` | Enabled |
 | `podDisruptionBudget.enabled` | Ensures minimum pods remain during maintenance | `false` |
 
@@ -62,7 +65,9 @@ See `values.yaml` for the full list, including resource requests, security conte
 ## Operations
 
 - Health endpoint: `GET /v1/health`
+- Metrics endpoint: `GET /metrics` (annotations and optional `ServiceMonitor` provided)
 - TXT management: `POST /v1/dns/add` and `/v1/dns/remove`
 - Mount paths (read-only): `/etc/gprox/config.yaml`, `/etc/gprox/google.json`
+- Writable runtime path: `/tmp` (mounted as `emptyDir` tmpfs and exported via `TMPDIR`/`PROMETHEUS_MULTIPROC_DIR`)
 
 Check the rendered NOTES after installation for quick validation commands and a reminder about the required secrets. Before each release, run `helm lint charts/gprox` and `helm template` with representative values as described in the root `design_spec.md`.

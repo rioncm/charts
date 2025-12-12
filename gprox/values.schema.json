@@ -52,6 +52,14 @@
     "podLabels": { "type": "object" },
     "podSecurityContext": { "type": "object" },
     "securityContext": { "type": "object" },
+    "tmpfs": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "path": { "type": "string" },
+        "medium": { "type": "string" }
+      }
+    },
     "service": {
       "type": "object",
       "properties": {
@@ -60,6 +68,24 @@
         "annotations": { "type": "object" },
         "labels": { "type": "object" },
         "nodePort": { "type": ["integer", "null"], "minimum": 1, "maximum": 65535 }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "path": { "type": "string" },
+        "port": { "type": "string" },
+        "serviceMonitor": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "namespace": { "type": "string" },
+            "labels": { "type": "object" },
+            "interval": { "type": "string" },
+            "scrapeTimeout": { "type": "string" }
+          }
+        }
       }
     },
     "ingress": {

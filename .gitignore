@@ -4,6 +4,7 @@ future-development/
 HARBOR-INTEGRATION.md
 - --- IGNORE ---
 _dev/
+.helmforge/
 # Reference directory - keep local only
 reference/
 

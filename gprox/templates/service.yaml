@@ -8,9 +8,17 @@ metadata:
     {{- with .Values.service.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-  {{- with .Values.service.annotations }}
+  {{- $metricsPort := default (printf "%v" .Values.service.port) .Values.metrics.port }}
+  {{- if or .Values.metrics.enabled .Values.service.annotations }}
   annotations:
+    {{- if .Values.metrics.enabled }}
+    prometheus.io/scrape: "true"
+    prometheus.io/path: {{ (.Values.metrics.path | default "/metrics") | quote }}
+    prometheus.io/port: {{ $metricsPort | quote }}
+    {{- end }}
+    {{- with .Values.service.annotations }}
     {{- toYaml . | nindent 4 }}
+    {{- end }}
   {{- end }}
 spec:
   type: {{ .Values.service.type }}
